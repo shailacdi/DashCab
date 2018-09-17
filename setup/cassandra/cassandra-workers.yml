@@ -1,0 +1,11 @@
+purchase_type: on_demand
+subnet_id: subnet-xxx
+price: 0.13
+num_instances: 3
+key_name: xxx-IAM-keypair
+security_group_ids:sg-xxxx
+instance_type: m4.large
+tag_name: xxxx-cassandra
+vol_size: 100
+role: worker
+use_eips: true

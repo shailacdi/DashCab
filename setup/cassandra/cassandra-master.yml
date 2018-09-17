@@ -1,0 +1,10 @@
+purchase_type: on_demand
+subnet_id: subnet-xxx
+num_instances: 1
+key_name: xxx-IAM-keypair
+security_group_ids: sg-xxx
+instance_type: m4.large
+tag_name: xxxx-cassandra
+vol_size: 200
+role: master
+use_eips: true
