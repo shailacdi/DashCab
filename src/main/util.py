@@ -27,7 +27,7 @@ def trip_time_block(timestamp):
         blocknumber of the 6-minute slot
     """
     date = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
-    return (date.hour * 60 + date.minute) / 6
+    return (date.hour * 60 + date.minute) /15 
 
 
 #def get_borough_zone(a_long, a_lat, borough_dict):
@@ -37,11 +37,12 @@ def get_borough_zone(a_long, a_lat, borough_dict):
     returns information such as borough id and borough name
     """
     #point = Point(-73.972736,40.762475)
-    point = Point(a_long, a_lat)
+    point = Point(a_long, a_lat)	
+#    print point
     for key in borough_dict:
         for polygon in borough_dict[key][2]:
             if point.within(polygon):
-                return key
+                return (key,borough_dict[key][0])
 
 
 def get_borough_data_dict(borough_file):
