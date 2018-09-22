@@ -4,45 +4,32 @@ This package has all utility/validation functions
 from datetime import datetime
 import json
 from shapely.geometry import Point, shape
-import ConfigParser as cp
+import ConfigParser
 import sys
 
-def read_config_file():
-    props = cp.RawConfigParser()
-    props.read("setup/application.properties")
-#    env = sys.argv[1]
-    env = 'test'
-    cassandra_server_name = props.get(env, 'CASSANDRA.host.name')
-    cassandra_keyspace_name = props.get(env, 'CASSANDRA.keyspace.name')
+#read the application properties file
+def load_application_properties(env, config_file):
+    props = ConfigParser.RawConfigParser()
+    props.read(config_file)
+    properties = {}
+    for option in props.options(env):
+        properties[option]=props.get(env,option)
+        print option, properties[option]
+    return properties
 
-# from geojson import Polygon
-
-def trip_time_block(timestamp):
-    """
-    Need time blocks in one day to perform statistical calculations. Each block is
-    of duration of 6 minutes
-    input :
-        timestamp -  contains time in the following format yyyy-mm-dd hh:mm:ss
-    output:
-        blocknumber of the 6-minute slot
-    """
-    date = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
-    return (date.hour * 60 + date.minute) /15 
-
-
-#def get_borough_zone(a_long, a_lat, borough_dict):
-def get_borough_zone(a_long, a_lat, borough_dict):
+def get_borough_zone(a_long, a_lat):
     """
     This function looks up a give GPS co-ordinate in the NYC borough data and
     returns information such as borough id and borough name
     """
     #point = Point(-73.972736,40.762475)
-    point = Point(a_long, a_lat)	
+    print "getting borough zone", a_long, a_lat
+    point = Point(a_long, a_lat)
 #    print point
-    for key in borough_dict:
-        for polygon in borough_dict[key][2]:
+    for key in borough_info:
+        for polygon in borough_info[key][2]:
             if point.within(polygon):
-                return (key,borough_dict[key][0])
+                return (key,borough_info[key][0])
 
 
 def get_borough_data_dict(borough_file):
@@ -73,4 +60,19 @@ def get_borough_data_dict(borough_file):
                 borough_dict[borough_zone] = (zone_name, zone_coord, polygon_list)
             except KeyError:
                 borough_dict[borough_zone] = (borough_name, list([borough_coord]), list([polygon]))
+    print "loaded borough_dict"
     return (borough_dict)
+
+def trip_time_block(timestamp):
+    """
+    Need time blocks in one day to perform statistical calculations. Each block is
+    of duration of 6 minutes
+    input :
+        timestamp -  contains time in the following format yyyy-mm-dd hh:mm:ss
+    output:
+        blocknumber of the 6-minute slot
+    """
+    date = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
+    return (date.hour * 60 + date.minute) /15 
+
+
