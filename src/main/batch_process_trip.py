@@ -30,14 +30,29 @@ import json
 import calendar
 from cassandra.cluster import Cluster
 
+def isfloat(value):
+  try:
+    float(value)
+    return True
+  except ValueError:
+    return False
+
 def process_trip_record(line, borough_info):
     #print line
     fields = line.rstrip().split(",")
     if(len(fields) < 7):
         return None
+
     t_timestamp = fields[1]
-    t_long = float(fields[5])
-    t_lat = float(fields[6])
+    if isfloat(fields[5]):
+        t_long = float(fields[5])
+    else:
+        return None
+    if isfloat(fields[6]):
+        t_lat = float(fields[6])
+    else:
+        return None
+
     if (t_long ==0 or t_lat == 0):
         return None
     t_date = t_timestamp.split(" ")[0]
@@ -65,9 +80,9 @@ def process_batch_data(sc, borough_info):
                      .reduceByKey(lambda val1, val2 : val1+val2) \
                      .groupByKey() \
                      .map(lambda row : (row[0][0],row[0][1],row[0][2],row[0][3], row[0][4],get_statistics_stdev(list(row[1])),get_statistics_mean(list(row[1]))))
-    for i in data_stats.collect():
-        print i
-    print ("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+
+    #                     .map(lambda x : str(x[0][0])+","+str(x[0][1])+","+str(x[0][2])+","+str(x[0][3])+","+str(x[0][4])+","+str(x[1]))
+    #    data_stats.coalesce(1).saveAsTextFile("data.csv")
     return (data_stats)
 
 
@@ -164,5 +179,10 @@ if __name__ == '__main__':
     conf = SparkConf().setAppName("trip").set("spark.cassandra.connection.host",cassandra_server)
     sc = SparkContext(conf=conf)
     borough_info = get_borough_data_dict(properties["nyc_borough"])
-    data_stats = process_batch_data(sc,borough_info)
-    save_batch_trip_stats(sc, data_stats, cassandra_keyspace, cassandra_table)
+    try:
+        data_stats = process_batch_data(sc,borough_info)
+        save_batch_trip_stats(sc, data_stats, cassandra_keyspace, cassandra_table)
+    except Exception:
+        print "Error processing the trip batch data"
+        sys.exit(-1)
+

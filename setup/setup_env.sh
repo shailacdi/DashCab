@@ -59,3 +59,13 @@ s3bucket=scdi-data
 
 echo "transferring yellow taxi data files to s3"
 aws s3 cp /home/ubuntu/taxi s3://$s3bucket/taxi/ --recursive
+
+#on the web ec2 instance for web
+sudo apt-get update
+sudo apt-get install python3-pip
+sudo pip3 install cassandra-driver --install-option="--no-cython"
+sudo pip3 install dash
+sudo pip3 install dash_core_components
+sudo pip3 install dash_html_components
+sudo pip3 install pandas
+sudo pip3 install plotly
