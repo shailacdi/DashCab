@@ -158,6 +158,7 @@ def trip_time_info(timestamp):
     date = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
     time_block = (date.hour * 60 + date.minute) /30
     month = calendar.month_name[date.month]
+    #month = date.strftime('%B')
     day = date.strftime('%A')
     return (time_block, month, day)
 

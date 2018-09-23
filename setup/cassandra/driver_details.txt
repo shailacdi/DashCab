@@ -1,0 +1,14 @@
+insert into driver_details (driver_id,active,current_borough_id,driver_lname,driver_fname,driver_rating,start_borough_id) values(493092,1,1,'MAIGA','BOUNAFOU',4,1);
+insert into driver_details (driver_id,active,current_borough_id,driver_lname,driver_fname,driver_rating,start_borough_id) values(681774,1,1,'GNANARAJ','SINNA',3.5,1);
+insert into driver_details (driver_id,active,current_borough_id,driver_lname,driver_fname,driver_rating,start_borough_id) values(497742,1,2,'LACY','SAM',2,2);
+insert into driver_details (driver_id,active,current_borough_id,driver_lname,driver_fname,driver_rating,start_borough_id) values(498143,1,2,'KAREEM','LUKMAN',3,2);
+insert into driver_details (driver_id,active,current_borough_id,driver_lname,driver_fname,driver_rating,start_borough_id) values(688826,1,3,'SANTANA','JUAN',4,3);
+insert into driver_details (driver_id,active,current_borough_id,driver_lname,driver_fname,driver_rating,start_borough_id) values(686178,1,3,'TAVERAS','OLGA',3.5,3);
+insert into driver_details (driver_id,active,current_borough_id,driver_lname,driver_fname,driver_rating,start_borough_id) values(664245,1,4,'CORNIEL','PEDRO',2.5,4);
+insert into driver_details (driver_id,active,current_borough_id,driver_lname,driver_fname,driver_rating,start_borough_id) values(498190,1,4,'JAMILU','MOHAMMED',3,4);
+insert into driver_details (driver_id,active,current_borough_id,driver_lname,driver_fname,driver_rating,start_borough_id) values(689626,1,5,'BRODIE','ALFRED',3,5);
+insert into driver_details (driver_id,active,current_borough_id,driver_lname,driver_fname,driver_rating,start_borough_id) values(695067,1,5,'ORTIZ','ANGEL1',3,5);
+insert into driver_details (driver_id,active,current_borough_id,driver_lname,driver_fname,driver_rating,start_borough_id) values(501583,0,4,'CSONKA','ATTILA',3,4);
+insert into driver_details (driver_id,active,current_borough_id,driver_lname,driver_fname,driver_rating,start_borough_id) values(694478,0,3,'MAHMOUD','ASHRAF',4,4);
+insert into driver_details (driver_id,active,current_borough_id,driver_lname,driver_fname,driver_rating,start_borough_id) values(498275,0,2,'PARMAR','HARVINDER',3,2);
+insert into driver_details (driver_id,active,current_borough_id,driver_lname,driver_fname,driver_rating,start_borough_id) values(500187,0,1,'CHAUDHRY','FAROOQ',3,1);

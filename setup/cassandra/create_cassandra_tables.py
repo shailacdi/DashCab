@@ -13,6 +13,17 @@ session.execute("CREATE TABLE if not exists trip_stats (time_block int, month te
 
 session.execute("CREATE TABLE if not exists medallion_master (medallion_id text, PRIMARY KEY (medallion_id))")
 
-session.execute("CREATE TABLE if not exists driver_master (driver_id int, driver_rating int, preferred_borough int, active int, PRIMARY KEY (driver_id))")
+session.execute("CREATE TABLE if not exists driver_details (driver_id int, driver_lname text, driver_fname text,driver_rating float, start_borough_id int, active int, current_borough_id int, PRIMARY KEY (driver_id))")
 
-session.execute("CREATE TABLE if not exists driver_assignment (assign_date text, driver_id int, medallion_id, PRIMARY KEY (assign_date, driver_id))")
+session.execute("CREATE TABLE if not exists medallion_driver_assignment (assign_date text, driver_id int, medallion_id text,PRIMARY KEY (assign_date, driver_id))")
+
+session.execute()
+
+
+
+"""
+CREATE TABLE if not exists medallion_master (medallion_id text, PRIMARY KEY (medallion_id))
+CREATE TABLE if not exists driver_details (driver_id int, driver_rating int, start_borough_id int, active int, current_borough_id int, PRIMARY KEY (driver_id))
+CREATE TABLE if not exists medallion_driver_assignment (assign_date text, driver_id int, medallion_id text, PRIMARY KEY (assign_date, driver_id))
+
+"""
