@@ -46,6 +46,7 @@ pip install plotly
 pip install dash
 pip install dash_core_components
 pip install dash_html_components
+peg sshcmd-cluster s-spark "sudo pip install kafka-python"
 
 #In /usr/local/spark/conf/spark-env.sh
 #export HADOOP_CONF_DIR=$DEFAULT_HADOOP_HOME/etc/hadoop
