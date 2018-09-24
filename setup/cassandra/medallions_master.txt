@@ -12,6 +12,9 @@ insert into medallion_master (medallion_id) values ('55AA8BC1FB8DE1ADB622C4386CA
 insert into medallion_master (medallion_id) values ('8DBE6E020258574026304CC4F1BF12E1');
 
 
+update medallion_driver_assignment set lat=40.772816, long=-73.986214 where driver_id=493092 and assign_date='2018-09-23'
+update medallion_driver_assignment set lat=40.711899, long=-73.991875 where driver_id=498143 and assign_date='2018-09-23'
+update medallion_driver_assignment set lat=40.724354, long=-73.973755 where driver_id=498190 and assign_date='2018-09-23'
 
 
 CEC48365CBE299E675782E04BCD2BD83

@@ -87,4 +87,4 @@ def update_graph(t_borough,t_day,t_month):
 
 
 if __name__ == '__main__':
-    app.run_server(host="ec2-54-167-206-96.compute-1.amazonaws.com", port=80)
+    app.run_server(host="ec2-54-196-134-177.compute-1.amazonaws.com", port=80)
