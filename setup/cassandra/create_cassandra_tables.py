@@ -15,7 +15,10 @@ session.execute("CREATE TABLE if not exists medallion_master (medallion_id text,
 
 session.execute("CREATE TABLE if not exists driver_details (driver_id int, driver_lname text, driver_fname text,driver_rating float, start_borough_id int, active int, current_borough_id int, PRIMARY KEY (driver_id))")
 
-session.execute("CREATE TABLE if not exists medallion_driver_assignment (assign_date text, driver_id int, medallion_id text, lat float, long float, PRIMARY KEY (assign_date, driver_id))")
+session.execute("CREATE TABLE if not exists medallion_driver_assignment (assign_date text, hack_license text, medallion_id text, lat float, long float, PRIMARY KEY (assign_date, driver_id))")
+
+session.execute("CREATE TABLE if not exists real_trip (assign_date text, hack_license text, medallion_id text, time_block int, month text, day text, borough_code int, borough_name text, lat float, long float, PRIMARY KEY (assign_date, hack_license))")
+
 
 session.execute()
 
