@@ -71,6 +71,7 @@ def get_statistics_mean(l_data):
 
 def process_batch_data(sc, borough_info):
     #send borough info to all data nodes
+    print "XXXXXXXXXXXXXXXXXXXXXXXXXXXX"
     dataRaw = sc.textFile(properties["s3_url"])
     header = dataRaw.first()
     data_stats = dataRaw.filter(lambda row: row!=header) \
@@ -87,6 +88,7 @@ def process_batch_data(sc, borough_info):
 
 
 def save_batch_trip_stats(sc, data_stats, trip_keyspace, trip_stats_table):
+    print "YYYYYYYYYYYYYYYYYYYYYYYYYYYY"
     spark = SparkSession(sc)
     hasattr(data_stats, "toDF")
     print trip_stats_table, trip_keyspace

@@ -47,6 +47,11 @@ pip install dash
 pip install dash_core_components
 pip install dash_html_components
 peg sshcmd-cluster s-spark "sudo pip install kafka-python"
+peg sshcmd-cluster s-spark "sudo pip install boto3"
+peg sshcmd-cluster s-spark "sudo pip install lazyreader"
+peg sshcmd-cluster s-spark "sudo pip install awscli"
+peg sshcmd-cluster s-spark "sudo pip install pandas"
+peg sshcmd-cluster s-spark "sudo pip install --upgrade pandas"
 
 #In /usr/local/spark/conf/spark-env.sh
 #export HADOOP_CONF_DIR=$DEFAULT_HADOOP_HOME/etc/hadoop
@@ -70,3 +75,5 @@ sudo pip3 install dash_core_components
 sudo pip3 install dash_html_components
 sudo pip3 install pandas
 sudo pip3 install plotly
+
+ /usr/local/kafka/bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 3 --partitions 2 --topic trips

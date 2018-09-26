@@ -7,11 +7,12 @@ import json
 from pyspark import SparkContext, SparkConf
 from pyspark.streaming import StreamingContext
 from pyspark.streaming.kafka import KafkaUtils
-from pyspark.sql import SparkSession
+from pyspark.sql import SparkSession, SQLContext
 from cassandra.cluster import Cluster
 from datetime import datetime
 import calendar
 from shapely.geometry import Point, shape
+import pandas as pd
 
 #read the application properties file
 def load_application_properties(env, config_file):
@@ -127,20 +128,40 @@ def process_trip_record(line):
 
 
 
-def process_stream(rdd):
+def process_stream(time,rdd):
+    print rdd
     print "XXXXXXXXXXXXXXXXXXXxinside process stream"
     dataRaw = rdd.map(lambda x: x[1]) \
                 .map(lambda row: process_trip_record(row)) \
                 .filter(lambda row: row != None)
 
-    print "zzzzzzzzzzzzz before create sparkcontext"
     spark = SparkSession(sc)
     hasattr(dataRaw, "toDF")
     for i in dataRaw.take(5):
         print i
-    aa = dataRaw.toDF(schema=["assign_date","hack_license","medallion_id","time_block","month","day","borough_code","borough_name","long","lat"])
-    print "zzzzzzzzzzzzz before writing to db"
-    #dataRaw.toDF(schema=["assign_date","hack_license","medallion_id","time_block","month","day","borough_code","borough_name","long","lat"]).write.format("org.apache.spark.sql.cassandra").mode("append").options(table="real_trip", keyspace="trip_batch").save()
+    dataRaw.toDF(schema=["assign_date","hack_license","medallion_id","time_block","month","day","borough_code","borough_name","long","lat"],sampleRatio=0.2).write.format("org.apache.spark.sql.cassandra").mode("append").options(table="real_trip", keyspace="trip_batch").save()
+
+    stats = stats_for_day.value
+    stats_df = SQLContext(sc).createDataFrame(stats)
+
+    a=dataRaw.map(lambda x : ((x[6], x[3], x[4], x[5]),(x[0].split(" ")[0], x[7],1 ))) \
+                .reduceByKey(lambda x,y : (x[0],x[1],x[2]+y[2])) \
+                .map(lambda x : (x[0][0],x[0][1],x[0][2],x[0][3],x[1][0],x[1][1],x[1][2]))
+    for i in a.take(5):
+        print i
+    #cond = [dataRaw.day == stats_df.day, dataRaw.month == stats_df.month, dataRaw.time_block == stats_df.time_block, dataRaw.borough_code == stats_df.borough_code]
+    dataRaw_df=dataRaw.map(lambda x : ((x[6], x[3], x[4], x[5]),(x[0].split(" ")[0], x[7],1 ))) \
+                .reduceByKey(lambda x,y : (x[0],x[1],x[2]+y[2])) \
+                .map(lambda x : (x[0][0],x[0][1],x[0][2],x[0][3],x[1][0],x[1][1],x[1][2])) \
+                .toDF(schema=["borough_code","time_block","month","day","assign_date","borough_name","actual_trips"])
+    dataRaw_df.show()
+
+    cond = [dataRaw_df["borough_code"] == stats_df["borough_code"], dataRaw_df["time_block"] == stats_df["time_block"]]
+
+    #dataRaw_df.join(stats_df, cond, 'left_outer') \
+    dataRaw_df.join(stats_df,["borough_code","time_block"]) \
+        .write.format("org.apache.spark.sql.cassandra").mode("append").options(table="real_trip_stats", keyspace="trip_batch").save()
+
     print "zzzzzzzzzzzzz after db write"
 
 
@@ -178,12 +199,12 @@ if __name__ == '__main__':
     month = "January"
     trip_date = "2018-09-23"
 
-    query_str = "select time_block, borough_code, borough_name, mean from {0} where day='{1}' and month='{2}' allow filtering".format(cassandra_table,day,month)
+    query_str = "select time_block, borough_code, mean, std_dev from {0} where day='{1}' and month='{2}' allow filtering".format(cassandra_table,day,month)
     session.execute("use {0}".format(cassandra_keyspace))
     stats = session.execute(query_str)
-    for i in stats:
-        print i
-    print "Obtaining stats data"
+    stats_df = pd.DataFrame(list(stats))
+    stats_for_day = sc.broadcast(stats_df)
+    print "Broadcastedd stats data"
 
 
     #load driver_medallion assignment details
@@ -201,20 +222,17 @@ if __name__ == '__main__':
     ssc = StreamingContext(sc, int(interval))
     print ssc
 
-    offset = 0
-    print offset, partitions
-
-    try:
-        fromOffsets = {TopicAndPartition(topic, i): long(offset) for i in range(partitions)}
-        print "inside try"
-    except:
-        fromOffsets = None
-        print "exception"
-
+    #try:
+    #    fromOffsets = {TopicAndPartition(topic, i): long(offset) for i in range(partitions)}
+    #    print "inside try"
+    #except:
+    #    fromOffsets = None
+    #    print "exception"
+    #
     print "before create direct str"
     tripStream = KafkaUtils.createDirectStream(ssc, [topic],
-                                                {"metadata.broker.list": broker_ips},
-                                                fromOffsets=fromOffsets)
+                                                {"metadata.broker.list": broker_ips})
+
     print "befpre repartition"
 
     process_rdd = process_stream
