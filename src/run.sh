@@ -11,6 +11,7 @@ spark-submit --master spark://$SPARK_BATCH_CLUSTER:7077 \
                  --packages $CASSANDRA \
 	         --driver-memory 4G \
                  --executor-memory 4G \
+                 --num-executor 3
                  src/main/batch_process_trip.py \
                  $CONFIG_FILE prod 
 

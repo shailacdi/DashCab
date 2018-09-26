@@ -233,7 +233,7 @@ if __name__ == '__main__':
     tripStream = KafkaUtils.createDirectStream(ssc, [topic],
                                                 {"metadata.broker.list": broker_ips})
 
-    print "befpre repartition"
+    print "before repartition"
 
     process_rdd = process_stream
     tripStream.foreachRDD(process_rdd)

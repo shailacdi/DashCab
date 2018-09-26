@@ -21,3 +21,19 @@ def get_stats_query(d_day,d_mon,d_borough, prepared_query, session):
     except ReadTimeout:
         log.exception("Query timed out:")
     return df
+
+
+def prepare_actual_stats_query(session):
+    query = "SELECT time_block,mean,actual_trips FROM real_trip_stats WHERE assign_date=? and day=? and borough_name=? ALLOW FILTERING"
+    return session.prepare(query)
+
+
+def get_actual_stats_query(d_date,d_day, borough, prepared_query, session):
+    print (d_date,d_day, borough)
+    count = session.execute_async(prepared_query, [d_date,d_day,borough])
+    try:
+        rows = count.result()
+        df = pd.DataFrame(list(rows))
+    except ReadTimeout:
+        log.exception("Query timed out:")
+    return df
