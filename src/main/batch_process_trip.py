@@ -79,7 +79,7 @@ class TaxiBatch:
         self.cassandra_table = self.properties["cassandra.trip_stats_table"]
         self.cassandra_keyspace = self.properties["cassandra.trip.keyspace"]
         self.spark_master = self.properties["spark.master"]
-        self.s3_url=self.properties["s3_url"]
+        self.s3_url=self.properties["batch_s3_url"]
         self.nyc_borough = self.properties["nyc_borough"]
 
         #initialize SparkConf and SparkContext along  with cassandra settings
@@ -90,11 +90,12 @@ class TaxiBatch:
         self.borough_info = util.get_borough_data_dict(self.nyc_borough)
 
 
+"""
+The main method to process historical trip data. This instantiates the class
+TaxiBatch and process the batch data and saves it to the database
+"""
 if __name__ == '__main__':
-    """
-    main method to process historical trip data. This instantiates the class
-    TaxiBatch and process the batch data and saves it to the database
-    """
+
     #check for proper arguments
     if len(sys.argv) != 3:
         sys.stderr.write("Please check the command line options and arguments")

@@ -1,5 +1,5 @@
 """
-This package has all utility/validation functions
+This package has all commonly used utility/validation functions
 """
 from datetime import datetime
 import json
@@ -73,6 +73,31 @@ def process_trip_record(line, borough_info):
         return None
 
 
+def process_real_trip_record(line, borough_info):
+    fields = line.rstrip().split(",")
+    if(len(fields) < 7):
+        return None
+
+    t_timestamp = fields[5]
+    if isfloat(fields[10]):
+        t_long = float(fields[10])
+    else:
+        return None
+    if isfloat(fields[11]):
+        t_lat = float(fields[11])
+    else:
+        return None
+
+    if (t_long ==0 or t_lat == 0):
+        return None
+    hack_license = fields[1]
+    medallion = ""
+    t_time = trip_time_info(t_timestamp)
+    t_borough = get_borough_zone(t_long,t_lat, borough_info)
+    if (t_borough != None):
+        return  (t_timestamp, hack_license, medallion, t_time[0], t_time[1], t_time[2], t_borough[0], t_borough[1], t_long,t_lat)
+    else:
+        return None
 
 def get_borough_zone(a_long, a_lat,borough_info):
     """
@@ -129,7 +154,7 @@ def trip_time_info(timestamp):
         blocknumber of the 6-minute slot
     """
     date = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
-    time_block = (date.hour * 60 + date.minute) /30
+    time_block = (date.hour * 60 + date.minute) /10
     month = calendar.month_name[date.month]
     day = date.strftime('%A')
     return (time_block, month, day)

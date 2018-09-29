@@ -32,7 +32,7 @@ def produce_msgs(broker_ips, topic, bucket, data_file):
                 producer.send(topic, value=line,key=str(i).encode())
                 print i, line[:20]
                 i = i+1
-            time.sleep(0.001)
+            time.sleep(0.01)
 
 
 # main program
@@ -46,6 +46,6 @@ if __name__ == "__main__":
     properties = load_application_properties(env, properties_file)
     broker_ips = properties["broker_ips"]
     topic = properties["topic"]
-    bucket = properties["s3_bucket"]
-    data_file = properties["s3_key"]
+    bucket = properties["kafka_s3_bucket"]
+    data_file = properties["kafka_s3_key"]
     produce_msgs(broker_ips, topic, bucket, data_file)
