@@ -3,19 +3,18 @@ This main program loads the taxi trip historical data, extracts relevant fields 
 values required for generating metrics.
 
 The input file consists of the following format
-vendor_name,Trip_Pickup_DateTime,Trip_Dropoff_DateTime,Passenger_Count,Trip_Distance,
-Start_Lon,Start_Lat,Rate_Code,store_and_forward,End_Lon,End_Lat,Payment_Type,
-Fare_Amt,surcharge,mta_tax,Tip_Amt,Tolls_Amt,Total_Amt
+VendorID,tpep_pickup_datetime,tpep_dropoff_datetime,passenger_count,trip_distance,
+RatecodeID,store_and_fwd_flag,PULocationID,DOLocationID,payment_type,fare_amount,
+extra,mta_tax,tip_amount,tolls_amount,improvement_surcharge,total_amount
 
-Fields extracted - Trip_Pickup_DateTime,Start_Lon,Start_Lat (indexes 1, 5, 6)
+Fields extracted mainly are - tpep_pickup_datetime,PULocationID (indexes 1, 7)
 
 Performs transformations and actions on Spark RDD to obtain the following fields
 
-Trip_Pickup_DateTime(only date)
-Start_Lon (pick up location, longitude)
-Start_Lat (pick up location, latitude)
-Time block (computed out of the time component in the above original field)
-Number of trips per time block (unit time block is 15 mins. 24hours will have 96 time blocks)
+assign_date(only date)
+borough name (lookup using pick up location)
+time block (computed out of the time component in the above original field)
+number of trips per time block (unit time block is 15 mins. 24hours will have 96 time blocks)
 
 """
 import pyspark
@@ -42,19 +41,17 @@ class TaxiBatch:
         #load raw files using spark context
         self.data_stats = self.sc.textFile(self.s3_url)
 
-        #the first row is the header
-        header = self.data_stats.first()
-        #filter the header, map and get total trips in one timeblock using
+        #map and get total trips in one timeblock using
         #reducebykey time block, day, month, borough
-        #groupByKey using the same fields above
-        borough_info_bc = self.sc.broadcast(self.borough_info)
-        self.data_stats = self.data_stats.filter(lambda row: row!=header) \
-                     .map(lambda row : util.process_trip_record(row, borough_info_bc.value)) \
+        #aggregateByKey using the same fields above to get (count of matching records,sum of trips)
+        zone_info_bc = self.sc.broadcast(self.zone_info)
+        self.data_stats = self.data_stats.map(lambda row : util.process_trip_record(row, zone_info_bc.value)) \
                      .filter(lambda row: row != None) \
-                     .map(lambda row : ((row[1],row[2],row[3], row[4], row[5]),1)) \
-                     .reduceByKey(lambda val1, val2 : val1+val2) \
-                     .groupByKey() \
-                     .map(lambda row : (row[0][0],row[0][1],row[0][2],row[0][3], row[0][4],util.get_statistics_stdev(list(row[1])),util.get_statistics_mean(list(row[1]))))
+                     .map(lambda row : ((row[0].split(" ")[0],row[1],row[2],row[3], row[4], row[5]),1)) \
+                     .reduceByKey(lambda x,y : x+y) \
+                     .map(lambda x : ((x[0][1],x[0][2],x[0][3],x[0][4],x[0][5]),x[1])) \
+                     .aggregateByKey((0,0),lambda x,y : (x[0]+1, x[1]+y), lambda x,y: (x[0]+y[0],x[1]+y[1])) \
+                     .map(lambda x : (x[0][0],x[0][1],x[0][2],x[0][3],x[0][4],x[1][1]/x[1][0]))
 
     def save_batch_trip_stats(self):
         """
@@ -62,10 +59,8 @@ class TaxiBatch:
         """
         spark = SparkSession(self.sc)
         hasattr(self.data_stats, "toDF")
-        self.data_stats.toDF(schema=["time_block","month","day","borough_code","borough_name","std_dev","mean"]).write.format("org.apache.spark.sql.cassandra").mode("append").options(table=self.cassandra_table, keyspace=self.cassandra_keyspace).save()
+        self.data_stats.toDF(schema=["time_block","month","day","borough_code","borough_name","mean"]).write.format("org.apache.spark.sql.cassandra").mode("append").options(table=self.cassandra_table, keyspace=self.cassandra_keyspace).save()
         print ("Saved data successfully")
-
-
 
     def __init__(self,env,config_file):
         """
@@ -81,13 +76,14 @@ class TaxiBatch:
         self.spark_master = self.properties["spark.master"]
         self.s3_url=self.properties["batch_s3_url"]
         self.nyc_borough = self.properties["nyc_borough"]
+        self.nyc_zones=self.properties["nyc_zones"]
 
         #initialize SparkConf and SparkContext along  with cassandra settings
         self.conf = SparkConf().setAppName("trip").set("spark.cassandra.connection.host",self.cassandra_server)
         self.sc = SparkContext(conf=self.conf)
 
         #load the nyc borough coordinates from geojson file
-        self.borough_info = util.get_borough_data_dict(self.nyc_borough)
+        self.zone_info = util.get_zone_dict(self.nyc_zones)
 
 
 """
