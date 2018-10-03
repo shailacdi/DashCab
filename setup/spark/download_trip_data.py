@@ -29,8 +29,11 @@ for yr in year:
         taxiUrls.append(url)
 
 for url in taxiUrls:
-    os.system("wget " + url + " -P /home/ubuntu/taxi --trust-server-names")
+    os.system("wget " + url + " -P /home/ubuntu/taxi-data --trust-server-names")
 
+os.system("echo 'transferring yellow taxi data files to s3'")
+os.system("aws s3 cp /home/ubuntu/taxi-data s3://scdi-data/ --recursive")
 
-# get the borough polygon boundary coordinates
-os.system("wget http://data.beta.nyc//dataset/68c0332f-c3bb-4a78-a0c1-32af515892d6/resource/7c164faa-4458-4ff2-9ef0-09db00b509ef/download/42c737fd496f4d6683bba25fb0e86e1dnycboroughboundaries.geojson -P /home/ubuntu/taxi --trust-server-names")
+os.system("echo 'removing downloaded files in ec2 instance'")
+os.system("rm -R /home/ubuntu/taxi-data")
+
