@@ -67,13 +67,14 @@ echo "transferring yellow taxi data files to s3"
 aws s3 cp /home/ubuntu/taxi s3://$s3bucket/taxi/ --recursive
 
 #on the web ec2 instance for web
-sudo apt-get update
-sudo apt-get install python3-pip
-sudo pip3 install cassandra-driver --install-option="--no-cython"
-sudo pip3 install dash
-sudo pip3 install dash_core_components
-sudo pip3 install dash_html_components
-sudo pip3 install pandas
-sudo pip3 install plotly
+peg sshcmd-cluster weB "sudo apt-get update"
+peg sshcmd-cluster weB "sudo apt-get install python3-pip"
+peg sshcmd-cluster weB "sudo pip3 install cassandra-driver --install-option="--no-cython"
+peg sshcmd-cluster weB "sudo pip3 install dash"
+peg sshcmd-cluster weB "sudo pip3 install dash_core_components"
+peg sshcmd-cluster weB "sudo pip3 install dash_html_components"
+peg sshcmd-cluster weB "sudo pip3 install pandas"
+peg sshcmd-cluster weB "sudo pip3 install plotly"
 
  /usr/local/kafka/bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 3 --partitions 2 --topic trips
+
