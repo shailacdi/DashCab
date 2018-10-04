@@ -20,12 +20,18 @@ def prepare_stats_query(session):
     query = "SELECT time_block,mean FROM trip_stats WHERE day=? and month=? and borough_name=? ALLOW FILTERING"
     return session.prepare(query)
 
+def get_time(t_time):
+    return ("%02d" % (t_time*10/60) + ":" + "%02d" % (t_time*10 % 60))
+
 def get_stats_query(d_day,d_mon,d_borough, prepared_query, session):
     #executes and returns the dataset from the batch statistics dataset
     result_set = session.execute_async(prepared_query, [d_day,d_mon,d_borough])
     try:
         rows = result_set.result()
         df = pd.DataFrame(list(rows))
+        if (len(df.index) == 0):
+            return None
+        df['time_block'] = df['time_block'].apply(lambda x: get_time(x))
     except ReadTimeout:
         log.exception("Query timed out:")
     return df
@@ -34,7 +40,6 @@ def get_stats_query(d_day,d_mon,d_borough, prepared_query, session):
 def prepare_actual_stats_query(session):
     # prepared statement for getting metrics from real-time trips
     query = "SELECT time_block,mean,actual_trips FROM real_trip_stats WHERE assign_date=? and borough_name=? ALLOW FILTERING"
-    print (query)
     return session.prepare(query)
 
 
@@ -43,15 +48,18 @@ def get_actual_stats_query(borough, prepared_query, session):
     executes and returns the dataset from the real-time trip stats table for today
     processes the dataframe to aggregate the actual number of trips made in various time slots
     """
+
     d_date = datetime.datetime.now().strftime("%Y-%m-%d")
+    d_date = '2018-10-03'
     print (d_date, borough)
     result_set = session.execute_async(prepared_query, [d_date,borough])
     try:
         rows = result_set.result()
         df = pd.DataFrame(list(rows))
-        print(df.to_string())
+        if (len(df.index)==0):
+            return None
         df = df.groupby(['time_block','mean']).agg({"actual_trips": "sum"}).reset_index()
-        print(df.to_string())
+        df['time_block'] = df['time_block'].apply(lambda x: get_time(x))
 
     except ReadTimeout:
         log.exception("Query timed out:")
