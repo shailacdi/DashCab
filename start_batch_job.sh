@@ -1,1 +1,1 @@
-python src/main/schema_filter.py 
+python src/main/schema_filter.py scdi-data
