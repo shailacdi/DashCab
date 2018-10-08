@@ -45,13 +45,20 @@ class TaxiBatch:
         #reducebykey time block, day, month, borough
         #aggregateByKey using the same fields above to get (count of matching records,sum of trips)
         zone_info_bc = self.sc.broadcast(self.zone_info)
-        self.data_stats = self.data_stats.map(lambda row : util.process_trip_record(row, zone_info_bc.value)) \
+
+        if self.location_type == 'TAXIZONE':
+            process_function = util.process_trip_record
+        else:
+            process_function = util.process_trip_record_gps
+        self.data_stats = self.data_stats.map(lambda row : process_function(row, zone_info_bc.value)) \
                      .filter(lambda row: row != None) \
                      .map(lambda row : ((row[0].split(" ")[0],row[1],row[2],row[3], row[4], row[5]),1)) \
                      .reduceByKey(lambda x,y : x+y) \
-                     .map(lambda x : ((x[0][1],x[0][2],x[0][3],x[0][4],x[0][5]),x[1])) \
-                     .aggregateByKey((0,0),lambda x,y : (x[0]+1, x[1]+y), lambda x,y: (x[0]+y[0],x[1]+y[1])) \
-                     .map(lambda x : (x[0][0],x[0][1],x[0][2],x[0][3],x[0][4],x[1][1]/x[1][0]))
+                     .map(lambda x : (x[0][0],x[0][1],x[0][2],x[0][3],x[0][4],x[0][5],x[1]))
+        for i in self.data_stats.take(5):
+            print i
+                     #.aggregateByKey((0,0),lambda x,y : (x[0]+1, x[1]+y), lambda x,y: (x[0]+y[0],x[1]+y[1])) \
+                     #.map(lambda x : (x[0][0],x[0][1],x[0][2],x[0][3],x[0][4],x[1][1]/x[1][0]))
 
     def save_batch_trip_stats(self):
         """
@@ -59,10 +66,11 @@ class TaxiBatch:
         """
         spark = SparkSession(self.sc)
         hasattr(self.data_stats, "toDF")
-        self.data_stats.toDF(schema=["time_block","month","day","borough_code","borough_name","mean"]).write.format("org.apache.spark.sql.cassandra").mode("append").options(table=self.cassandra_table, keyspace=self.cassandra_keyspace).save()
+
+        self.data_stats.toDF(schema=["assign_date","time_block","month","day","borough_code","borough_name","num_trips"]).write.format("org.apache.spark.sql.cassandra").mode("append").options(table=self.cassandra_table, keyspace=self.cassandra_keyspace).save()
         print ("Saved data successfully")
 
-    def __init__(self,env,config_file):
+    def __init__(self,env,config_file, location_type):
         """
         This initializes the class and loads the properties from the
         application.properties file. It initiates the SparkContext and
@@ -71,19 +79,22 @@ class TaxiBatch:
         #load all the properties
         self.properties = util.load_application_properties(env, config_file)
         self.cassandra_server = self.properties["cassandra.host.name"]
-        self.cassandra_table = self.properties["cassandra.trip_stats_table"]
+        self.cassandra_table = self.properties["cassandra.trip_data_table"]
         self.cassandra_keyspace = self.properties["cassandra.trip.keyspace"]
         self.spark_master = self.properties["spark.master"]
         self.s3_url=self.properties["batch_s3_url"]
         self.nyc_borough = self.properties["nyc_borough"]
         self.nyc_zones=self.properties["nyc_zones"]
-
+        self.location_type = location_type
         #initialize SparkConf and SparkContext along  with cassandra settings
         self.conf = SparkConf().setAppName("trip").set("spark.cassandra.connection.host",self.cassandra_server)
         self.sc = SparkContext(conf=self.conf)
 
         #load the nyc borough coordinates from geojson file
-        self.zone_info = util.get_zone_dict(self.nyc_zones)
+        if (self.location_type == 'TAXIZONE'):
+            self.zone_info = util.get_zone_dict(self.nyc_zones)
+        else:
+            self.zone_info = util.get_borough_data_dict(self.nyc_borough)
 
 
 """
@@ -93,7 +104,7 @@ TaxiBatch and process the batch data and saves it to the database
 if __name__ == '__main__':
 
     #check for proper arguments
-    if len(sys.argv) != 3:
+    if len(sys.argv) != 4:
         sys.stderr.write("Please check the command line options and arguments")
         sys.exit(-1)
 
@@ -102,8 +113,10 @@ if __name__ == '__main__':
     #section in the properties filename
     env = sys.argv[2]
 
+    location_type = sys.argv[3]
+
     #instantiate the batch processing class
-    taxi_batch = TaxiBatch(env, config_file)
+    taxi_batch = TaxiBatch(env, config_file, location_type)
 
     try:
         #initiate batch processing
@@ -113,4 +126,3 @@ if __name__ == '__main__':
     except Exception as e:
         print "Error processing the trip batch data", e
         sys.exit(-1)
-
