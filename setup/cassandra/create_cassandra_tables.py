@@ -10,6 +10,7 @@ session.execute("create keyspace if not exists "+ keyspace_name+ " WITH REPLICAT
 print("use "+keyspace_name)
 session.execute("use {0}".format(keyspace_name))
 
+session.execute("CREATE TABLE if not exists trip_data (assign_date text, time_block int,month text,day text, borough_code int, borough_name text, num_trips int, PRIMARY KEY (assign_date,borough_code,time_block, month, day))")
 session.execute("CREATE TABLE if not exists trip_stats (time_block int, month text,day text, borough_code int, borough_name text, mean int, PRIMARY KEY (borough_code,time_block, month, day))")
 
 session.execute("CREATE TABLE if not exists real_trip (assign_date text, time_block int, month text, day text, borough_code int, borough_name text,PRIMARY KEY (assign_date))")

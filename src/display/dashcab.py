@@ -13,8 +13,6 @@ import calendar
 cassandra_host_name="ec2-18-235-39-97.compute-1.amazonaws.com"
 cassandra_trip_keyspace="trip_batch"
 cassandra_trip_stats_table="real_trip_stats"
-DAY = list(calendar.day_name)
-Borough = ('Queens','Bronx','Brooklyn','Manhattan','Staten Island')
 
 session = trip_stats.start_connection(cassandra_host_name, cassandra_trip_keyspace)
 prep_trip_query1 = trip_stats.prepare_stats_query(session)
@@ -22,7 +20,7 @@ prep_trip_query2 = trip_stats.prepare_actual_stats_query(session)
 
 DAY = list(calendar.day_name)
 MONTH = list(calendar.month_name)
-Borough = ('Queens','Bronx','Brooklyn','Manhattan','Staten Island')
+Borough = ('EWR','Queens','Bronx','Brooklyn','Manhattan','Staten Island')
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 server = flask.Flask(__name__)
@@ -65,7 +63,7 @@ app.layout = html.Div([
 
     dcc.Interval(
         id='graph-update',
-        interval=1 * 1000
+        interval=10 * 1000
     ),
 ])
 

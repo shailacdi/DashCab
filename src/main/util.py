@@ -44,7 +44,7 @@ def load_application_properties(env, config_file):
         properties[option] = props.get(env, option)
     return properties
 
-def process_trip_record_old(line, borough_info):
+def process_trip_record_gps(line, borough_info):
     """
     input : line - corresponds to one trip record
     borough_info - geojson co-ordinates for NYC
@@ -77,36 +77,11 @@ def process_trip_record_old(line, borough_info):
     #using lat and long, get the corresponding borough details
     t_borough = get_borough_zone(t_long,t_lat,borough_info)
     if (t_borough != None):
-        return (t_date, t_time[0], t_time[1], t_time[2], t_borough[0], t_borough[1], t_long,t_lat)
+        return (t_date, t_time[0], t_time[1], t_time[2], t_borough[0], t_borough[1])
     else:
         return None
 
 
-def process_real_trip_record_old(line, borough_info):
-    fields = line.rstrip().split(",")
-    if(len(fields) < 7):
-        return None
-
-    t_timestamp = fields[5]
-    if isfloat(fields[10]):
-        t_long = float(fields[10])
-    else:
-        return None
-    if isfloat(fields[11]):
-        t_lat = float(fields[11])
-    else:
-        return None
-
-    if (t_long ==0 or t_lat == 0):
-        return None
-    hack_license = fields[1]
-    medallion = ""
-    t_time = trip_time_info(t_timestamp)
-    t_borough = get_borough_zone(t_long,t_lat, borough_info)
-    if (t_borough != None):
-        return  (t_timestamp, hack_license, medallion, t_time[0], t_time[1], t_time[2], t_borough[0], t_borough[1], t_long,t_lat)
-    else:
-        return None
 
 def get_borough_zone(a_long, a_lat,borough_info):
     """
@@ -207,8 +182,6 @@ def process_trip_record(line, zone_info):
     #using timestamp, get the corresponding time block
     t_time = trip_time_info(t_timestamp)
 
-    #using lat and long, get the corresponding borough details
-    print "XXXXXXXXXXXXXXXXXXXXXXx", t_zone
     zone_name = get_zone(t_zone,zone_info)
     if (zone_name != None):
         return (t_timestamp, t_time[0], t_time[1], t_time[2], t_zone, zone_name)
