@@ -50,8 +50,6 @@ def get_actual_stats_query(borough, prepared_query, session):
     """
 
     d_date = datetime.datetime.now().strftime("%Y-%m-%d")
-    d_date = '2018-10-03'
-    print (d_date, borough)
     result_set = session.execute_async(prepared_query, [d_date,borough])
     try:
         rows = result_set.result()

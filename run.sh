@@ -12,5 +12,5 @@ spark-submit --master spark://$SPARK_BATCH_CLUSTER:7077 \
                  --executor-memory 4G \
                  --num-executors 15 \
                  src/main/batch_process_files.py \
-                 $CONFIG_FILE prod $1 
+                 $CONFIG_FILE prod $1 $2
 

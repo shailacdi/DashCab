@@ -1,21 +1,11 @@
 """
-This main program loads the taxi trip historical data, extracts relevant fields and computes
-values required for generating metrics.
+This main program loads the processed historical taxi trip data, and computes metrics.
 
 The input file consists of the following format
-VendorID,tpep_pickup_datetime,tpep_dropoff_datetime,passenger_count,trip_distance,
-RatecodeID,store_and_fwd_flag,PULocationID,DOLocationID,payment_type,fare_amount,
-extra,mta_tax,tip_amount,tolls_amount,improvement_surcharge,total_amount
+assign_date, time_block, month, day, borough_name, borough_code, num_trips
 
-Fields extracted mainly are - tpep_pickup_datetime,PULocationID (indexes 1, 7)
-
-Performs transformations and actions on Spark RDD to obtain the following fields
-
-assign_date(only date)
-borough name (lookup using pick up location)
-time block (computed out of the time component in the above original field)
-number of trips per time block (unit time block is 15 mins. 24hours will have 96 time blocks)
-
+Performs aggregation to obtain the following fields
+time_block,day,month,borough_code,borough_name,average #of trips
 """
 import pyspark
 from pyspark import SparkConf, SparkContext, SQLContext
@@ -26,37 +16,24 @@ import util
 
 class TaxiStats:
     """
-    This class entirely processes the batch data with help of util functions.
-    It reads the settings from application.properties file, process the records line
-    by line with categorization by timeblock, day, month, and borough.
-
-    It does a series of transformations and finally saves it into the database
+    This class loads the processed historical trip data with help of util functions and saves
+    the calculated  metrics
     """
 
     def calculate_metrics(self):
         """
-        This function processes batch dataset. It loads the raw data from s3
-        and does a series of transformations, computations by key
+        This function loads the processed historical trip records from database table 'trip_data'
+        and aggregates by the following key to compute the average number of trips
+        (time_block, day, month, borough)
         """
-        #load raw files using spark context
-        #self.data_stats = self.sc.textFile(self.s3_url)
         self.data_stats = self.sqlContext.read.format("org.apache.spark.sql.cassandra").options(table=self.cassandra_trip_table, keyspace=self.cassandra_keyspace).load()
-        #map and get total trips in one timeblock using
-        #reducebykey time block, day, month, borough
-        #aggregateByKey using the same fields above to get (count of matching records,sum of trips)
-        #zone_info_bc = self.sc.broadcast(self.zone_info)
-
         self.data_stats = self.data_stats.groupBy(['time_block','day','month','borough_code','borough_name']).agg(func.avg('num_trips').alias('mean'))
 
-        for i in self.data_stats.take(5):
-            print i
 
     def save_metrics(self):
         """
-        This function saves the batch processing results into the database
+        This function saves the batch processing results into the database table 'trip_stats'
         """
-        #spark = SparkSession(self.sc)
-        #hasattr(self.data_stats, "toDF")
         self.data_stats.write.format("org.apache.spark.sql.cassandra").mode("append").options(table=self.cassandra_stats_table, keyspace=self.cassandra_keyspace).save()
         print ("Saved data successfully")
 
@@ -74,16 +51,11 @@ class TaxiStats:
         self.cassandra_keyspace = self.properties["cassandra.trip.keyspace"]
         self.spark_master = self.properties["spark.master"]
         self.s3_url=self.properties["batch_s3_url"]
-        self.nyc_borough = self.properties["nyc_borough"]
-        self.nyc_zones=self.properties["nyc_zones"]
 
         #initialize SparkConf and SparkContext along  with cassandra settings
         self.conf = SparkConf().setAppName("trip").set("spark.cassandra.connection.host",self.cassandra_server)
         self.sc = SparkContext(conf=self.conf)
         self.sqlContext = SQLContext(self.sc)
-
-        #load the nyc borough coordinates from geojson file
-        self.zone_info = util.get_zone_dict(self.nyc_zones)
 
 
 """
@@ -102,13 +74,12 @@ if __name__ == '__main__':
     #section in the properties filename
     env = sys.argv[2]
 
-    #instantiate the batch processing class
+    #instantiate the batch stats computing class
     taxi_stats = TaxiStats(env, config_file)
 
     try:
-        #initiate batch processing
+        #calculate metrics and save metrics
         taxi_stats.calculate_metrics()
-        #saving results to the database
         taxi_stats.save_metrics()
     except Exception as e:
         print "Error processing the trip batch data", e

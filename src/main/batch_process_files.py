@@ -2,19 +2,21 @@
 This main program loads the taxi trip historical data, extracts relevant fields and computes
 values required for generating metrics.
 
-The input file consists of the following format
-VendorID,tpep_pickup_datetime,tpep_dropoff_datetime,passenger_count,trip_distance,
-RatecodeID,store_and_fwd_flag,PULocationID,DOLocationID,payment_type,fare_amount,
-extra,mta_tax,tip_amount,tolls_amount,improvement_surcharge,total_amount
-
-Fields extracted mainly are - tpep_pickup_datetime,PULocationID (indexes 1, 7)
+The input file may have one of the following two schemas:
+1   VendorID,tpep_pickup_datetime,tpep_dropoff_datetime,passenger_count,trip_distance,
+    RatecodeID,store_and_fwd_flag,PULocationID,DOLocationID,payment_type,fare_amount,
+    extra,mta_tax,tip_amount,tolls_amount,improvement_surcharge,total_amount
+    Fields extracted mainly are - tpep_pickup_datetime,PULocationID (indexes 1, 7)
+2.  vendor_id,pickup_datetime,dropoff_datetime,passenger_count,trip_distance,pickup_longitude,
+    pickup_latitude,rate_code,store_and_fwd_flag,dropoff_longitude,dropoff_latitude,payment_type,
+    fare_amount,surcharge,mta_tax,tip_amount,tolls_amount,total_amount
+    Fields extracted mainly are - pickup_datetime, pickup_longitude, pickup_latitude
 
 Performs transformations and actions on Spark RDD to obtain the following fields
-
-assign_date(only date)
-borough name (lookup using pick up location)
-time block (computed out of the time component in the above original field)
-number of trips per time block (unit time block is 15 mins. 24hours will have 96 time blocks)
+    assign_date(only date)
+    borough name (lookup using pick up location)
+    time block (computed out of the time component in the above original field)
+    number of trips per time block (unit time block is 15 mins. 24hours will have 96 time blocks)
 
 """
 import pyspark
@@ -33,17 +35,16 @@ class TaxiBatch:
     It does a series of transformations and finally saves it into the database
     """
 
-    def process_batch_data(self):
+    def process_batch_data(self, file_name):
         """
         This function processes batch dataset. It loads the raw data from s3
         and does a series of transformations, computations by key
         """
-        #load raw files using spark context
-        self.data_stats = self.sc.textFile(self.s3_url)
+        #load raw file using spark context
+        self.data_stats = self.sc.textFile(self.s3_url + file_name)
 
         #map and get total trips in one timeblock using
         #reducebykey time block, day, month, borough
-        #aggregateByKey using the same fields above to get (count of matching records,sum of trips)
         zone_info_bc = self.sc.broadcast(self.zone_info)
 
         if self.location_type == 'TAXIZONE':
@@ -55,10 +56,6 @@ class TaxiBatch:
                      .map(lambda row : ((row[0].split(" ")[0],row[1],row[2],row[3], row[4], row[5]),1)) \
                      .reduceByKey(lambda x,y : x+y) \
                      .map(lambda x : (x[0][0],x[0][1],x[0][2],x[0][3],x[0][4],x[0][5],x[1]))
-        for i in self.data_stats.take(5):
-            print i
-                     #.aggregateByKey((0,0),lambda x,y : (x[0]+1, x[1]+y), lambda x,y: (x[0]+y[0],x[1]+y[1])) \
-                     #.map(lambda x : (x[0][0],x[0][1],x[0][2],x[0][3],x[0][4],x[1][1]/x[1][0]))
 
     def save_batch_trip_stats(self):
         """
@@ -74,7 +71,8 @@ class TaxiBatch:
         """
         This initializes the class and loads the properties from the
         application.properties file. It initiates the SparkContext and
-        loads the borough coordinates for nyc
+        loads the borough coordinates or taxi zone coordinates for nyc
+        based on the location indicator
         """
         #load all the properties
         self.properties = util.load_application_properties(env, config_file)
@@ -90,7 +88,8 @@ class TaxiBatch:
         self.conf = SparkConf().setAppName("trip").set("spark.cassandra.connection.host",self.cassandra_server)
         self.sc = SparkContext(conf=self.conf)
 
-        #load the nyc borough coordinates from geojson file
+        #load nyc borough coordinates from geojson file if data file has GPS coordinates for pickup location
+        #load nyc taxi zone mappings if data file has taxi zone for pickup location
         if (self.location_type == 'TAXIZONE'):
             self.zone_info = util.get_zone_dict(self.nyc_zones)
         else:
@@ -104,7 +103,7 @@ TaxiBatch and process the batch data and saves it to the database
 if __name__ == '__main__':
 
     #check for proper arguments
-    if len(sys.argv) != 4:
+    if len(sys.argv) != 5:
         sys.stderr.write("Please check the command line options and arguments")
         sys.exit(-1)
 
@@ -113,14 +112,18 @@ if __name__ == '__main__':
     #section in the properties filename
     env = sys.argv[2]
 
+    #GPS or Taxizone indicator
     location_type = sys.argv[3]
+
+    #data file name currently being processed
+    file_name = sys.argv[4]
 
     #instantiate the batch processing class
     taxi_batch = TaxiBatch(env, config_file, location_type)
 
     try:
         #initiate batch processing
-        taxi_batch.process_batch_data()
+        taxi_batch.process_batch_data(file_name)
         #saving results to the database
         taxi_batch.save_batch_trip_stats()
     except Exception as e:
