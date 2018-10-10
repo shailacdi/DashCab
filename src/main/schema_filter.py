@@ -65,11 +65,11 @@ def get_s3files(s3_bucket):
         # GPS
         elif uses_gps_coord:
             print msg + "GPS"
-            os.system('./run.sh GPS {0}'.format(file_name))
+            os.system('cd /home/ubuntu/DashCab; ./run.sh GPS {0}'.format(file_name))
         # Taxi zone
         else:
             print msg + "TAXIZONE"
-            os.system('./run.sh TAXIZONE {0}'.format(file_name))
+            os.system('cd /home/ubuntu/DashCab; ./run.sh TAXIZONE {0}'.format(file_name))
 
 
 if (__name__=='__main__'):
