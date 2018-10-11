@@ -39,7 +39,9 @@ def get_stats_query(d_day,d_mon,d_borough, prepared_query, session):
 
 def prepare_actual_stats_query(session):
     # prepared statement for getting metrics from real-time trips
-    query = "SELECT time_block,mean,actual_trips FROM real_trip_stats WHERE assign_date=? and borough_name=? ALLOW FILTERING"
+    #ignoring date for demo purposes only
+    #query = "SELECT time_block,mean,actual_trips FROM real_trip_stats WHERE assign_date=? and borough_name=? ALLOW FILTERING"
+    query = "SELECT time_block,mean,actual_trips FROM real_trip_stats WHERE borough_name=? ALLOW FILTERING"
     return session.prepare(query)
 
 
@@ -48,9 +50,11 @@ def get_actual_stats_query(borough, prepared_query, session):
     executes and returns the dataset from the real-time trip stats table for today
     processes the dataframe to aggregate the actual number of trips made in various time slots
     """
+    #ignoring date for demo purposes only
+    #d_date = datetime.datetime.now().strftime("%Y-%m-%d")
+    #result_set = session.execute_async(prepared_query, [d_date,borough])
+    result_set = session.execute_async(prepared_query, [borough])
 
-    d_date = datetime.datetime.now().strftime("%Y-%m-%d")
-    result_set = session.execute_async(prepared_query, [d_date,borough])
     try:
         rows = result_set.result()
         df = pd.DataFrame(list(rows))
