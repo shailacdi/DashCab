@@ -11,10 +11,10 @@ number of trips per timeblock, joined with historical averages under similar con
 and saved into the database.
 
 The following info is saved into the database table real_trips
-"borough_code","time_block","month","day","assign_date","borough_name","actual_trips"
+"time_block","month","day","assign_date","borough_name","actual_trips"
 
 The following info is saved into the database table real_trips_stats
-"assign_date,borough_code,time_block,month,day,actual_trips,borough_name,mean"
+"assign_date,time_block,month,day,actual_trips,borough_name,mean"
 
 """
 
@@ -51,20 +51,20 @@ def process_stream(rdd, real_trip_table,real_trip_stats_table,keyspace):
         print i
 
     #save the real trip data into the table real_trip
-    dataRaw.toDF(schema=["assign_date","time_block","month","day","borough_code","borough_name"],sampleRatio=0.2).write.format("org.apache.spark.sql.cassandra").mode("append").options(table=real_trip_table, keyspace=keyspace).save()
+    dataRaw.toDF(schema=["assign_date","time_block","month","day","borough_name"],sampleRatio=0.2).write.format("org.apache.spark.sql.cassandra").mode("append").options(table=real_trip_table, keyspace=keyspace).save()
 
     #get the historical stats broadcast variable
     stats = stats_for_day.value
     stats_df = SQLContext(sc).createDataFrame(stats)
 
-    #(key, value) = ((borough_code,time_block,month,day),date,borough_name,1)
-    dataRaw_df=dataRaw.map(lambda x : ((x[4], x[1], x[2], x[3]),(x[0].split(" ")[0], x[5],1 ))) \
-                .reduceByKey(lambda x,y : (x[0],x[1],x[2]+y[2])) \
-                .map(lambda x : (x[0][0],x[0][1],x[0][2],x[0][3],x[1][0],x[1][1],x[1][2])) \
-                .toDF(schema=["borough_code","time_block","month","day","assign_date","borough_name","actual_trips"])
+    #(key, value) = ((borough_name,time_block,month,day),date,1)
+    dataRaw_df=dataRaw.map(lambda x : ((x[4], x[1], x[2], x[3]),(x[0].split(" ")[0],1 ))) \
+                .reduceByKey(lambda x,y : (x[0],x[1]+y[1])) \
+                .map(lambda x : (x[0][0],x[0][1],x[0][2],x[0][3],x[1][0],x[1][1])) \
+                .toDF(schema=["borough_name","time_block","month","day","assign_date","actual_trips"])
     #join the trip stats with the historical stats and store the consolidate values in table real_trip_stats
     #add a unique row differentiator since every rdd creates the output for which the key may be the same.
-    dataRaw_df = dataRaw_df.join(stats_df,["borough_code","time_block"]) \
+    dataRaw_df = dataRaw_df.join(stats_df,["borough_name","time_block"]) \
         .withColumn("time_stamp", rand())
     dataRaw_df.write.format("org.apache.spark.sql.cassandra").mode("append").options(table=real_trip_stats_table, keyspace=keyspace).save()
 
@@ -107,7 +107,7 @@ if __name__ == '__main__':
     session = cluster.connect()
 
     #load the historical statistics from database based on the day of the week and month
-    query_str = "select time_block, borough_code, mean from {0} where day='{1}' and month='{2}' allow filtering".format(trip_stats_table,day,month)
+    query_str = "select time_block, borough_name, mean from {0} where day='{1}' and month='{2}' allow filtering".format(trip_stats_table,day,month)
     session.execute("use {0}".format(cassandra_keyspace))
     stats = session.execute(query_str)
     stats_df = pd.DataFrame(list(stats))

@@ -53,9 +53,9 @@ class TaxiBatch:
             process_function = util.process_trip_record_gps
         self.data_stats = self.data_stats.map(lambda row : process_function(row, zone_info_bc.value)) \
                      .filter(lambda row: row != None) \
-                     .map(lambda row : ((row[0].split(" ")[0],row[1],row[2],row[3], row[4], row[5]),1)) \
+                     .map(lambda row : ((row[0].split(" ")[0],row[1],row[2],row[3], row[4]),1)) \
                      .reduceByKey(lambda x,y : x+y) \
-                     .map(lambda x : (x[0][0],x[0][1],x[0][2],x[0][3],x[0][4],x[0][5],x[1]))
+                     .map(lambda x : (x[0][0],x[0][1],x[0][2],x[0][3],x[0][4],x[1]))
 
     def save_batch_trip_stats(self):
         """
@@ -64,7 +64,7 @@ class TaxiBatch:
         spark = SparkSession(self.sc)
         hasattr(self.data_stats, "toDF")
 
-        self.data_stats.toDF(schema=["assign_date","time_block","month","day","borough_code","borough_name","num_trips"]).write.format("org.apache.spark.sql.cassandra").mode("append").options(table=self.cassandra_table, keyspace=self.cassandra_keyspace).save()
+        self.data_stats.toDF(schema=["assign_date","time_block","month","day","borough_name","num_trips"]).write.format("org.apache.spark.sql.cassandra").mode("append").options(table=self.cassandra_table, keyspace=self.cassandra_keyspace).save()
         print ("Saved data successfully")
 
     def __init__(self,env,config_file, location_type):

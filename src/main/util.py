@@ -49,7 +49,7 @@ def process_trip_record_gps(line, borough_info):
     input : line - corresponds to one trip record
     borough_info - geojson co-ordinates for NYC
     output : fields in the format
-    date,time block,month,day,borough,borough code,long,lat
+    date,time block,month,day,borough,long,lat
     """
     fields = line.rstrip().split(",")
     #check for existence of atleast first 7 fields
@@ -75,9 +75,9 @@ def process_trip_record_gps(line, borough_info):
     t_time = trip_time_info(t_timestamp)
 
     #using lat and long, get the corresponding borough details
-    t_borough = get_borough_zone(t_long,t_lat,borough_info)
-    if (t_borough != None):
-        return (t_date, t_time[0], t_time[1], t_time[2], t_borough[0], t_borough[1])
+    t_borough_name = get_borough_zone(t_long,t_lat,borough_info)
+    if (t_borough_name != None):
+        return (t_date, t_time[0], t_time[1], t_time[2], t_borough_name)
     else:
         return None
 
@@ -93,8 +93,8 @@ def get_borough_zone(a_long, a_lat,borough_info):
     for key in borough_info:
         for polygon in borough_info[key][2]:
             if point.within(polygon):
-                return (key,borough_info[key][0])
-    return None
+                return (borough_info[key][0])
+    return 'EWR'
 
 
 
@@ -165,7 +165,7 @@ def process_trip_record(line, zone_info):
     input : line - corresponds to one trip record
     borough_info - geojson co-ordinates for NYC
     output : fields in the format
-    date,time block,month,day,borough,borough code,long,lat
+    date,time block,month,day,borough name,long,lat
     """
     fields = line.rstrip().split(",")
     #check for existence of atleast first 7 fields
@@ -184,7 +184,7 @@ def process_trip_record(line, zone_info):
 
     zone_name = get_zone(t_zone,zone_info)
     if (zone_name != None):
-        return (t_timestamp, t_time[0], t_time[1], t_time[2], t_zone, zone_name)
+        return (t_timestamp, t_time[0], t_time[1], t_time[2], zone_name)
     else:
         return None
 

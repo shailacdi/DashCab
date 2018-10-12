@@ -2,10 +2,10 @@
 This main program loads the processed historical taxi trip data, and computes metrics.
 
 The input file consists of the following format
-assign_date, time_block, month, day, borough_name, borough_code, num_trips
+assign_date, time_block, month, day, borough_name, num_trips
 
 Performs aggregation to obtain the following fields
-time_block,day,month,borough_code,borough_name,average #of trips
+time_block,day,month,borough_name,average #of trips
 """
 import pyspark
 from pyspark import SparkConf, SparkContext, SQLContext
@@ -27,7 +27,7 @@ class TaxiStats:
         (time_block, day, month, borough)
         """
         self.data_stats = self.sqlContext.read.format("org.apache.spark.sql.cassandra").options(table=self.cassandra_trip_table, keyspace=self.cassandra_keyspace).load()
-        self.data_stats = self.data_stats.groupBy(['time_block','day','month','borough_code','borough_name']).agg(func.avg('num_trips').alias('mean'))
+        self.data_stats = self.data_stats.groupBy(['time_block','day','month','borough_name']).agg(func.avg('num_trips').alias('mean'))
 
 
     def save_metrics(self):
