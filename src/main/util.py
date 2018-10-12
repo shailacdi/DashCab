@@ -130,11 +130,11 @@ def get_borough_data_dict(borough_file):
 def trip_time_info(timestamp):
     """
     Need time blocks in one day to perform statistical calculations. Each block is
-    of duration of 6 minutes
+    of duration of 10 minutes
     input :
         timestamp -  contains time in the following format yyyy-mm-dd hh:mm:ss
     output:
-        blocknumber of the 6-minute slot
+        blocknumber of the 10-minute slot
     """
     date = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
     time_block = (date.hour * 60 + date.minute) /10
