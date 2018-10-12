@@ -31,6 +31,7 @@ def get_stats_query(d_day,d_mon,d_borough, prepared_query, session):
         df = pd.DataFrame(list(rows))
         if (len(df.index) == 0):
             return None
+        df = df.sort_values(['time_block'])
         df['time_block'] = df['time_block'].apply(lambda x: get_time(x))
     except ReadTimeout:
         log.exception("Query timed out:")
@@ -61,6 +62,7 @@ def get_actual_stats_query(borough, prepared_query, session):
         if (len(df.index)==0):
             return None
         df = df.groupby(['time_block','mean']).agg({"actual_trips": "sum"}).reset_index()
+        df = df.sort_values(['time_block'])
         df['time_block'] = df['time_block'].apply(lambda x: get_time(x))
 
     except ReadTimeout:

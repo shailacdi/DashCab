@@ -140,17 +140,23 @@ def update_Staten_Island(Staten_Island):
 def update_graph(t_borough):
     df1 = trip_stats.get_actual_stats_query(t_borough, prep_trip_query2, session)
 
-    if (df1 is None):
-        return
+    #get historical averages corresponding to today's day and month
+    t_month = 'July'
+    t_day = 'Thursday'
+
+    df2 = trip_stats.get_stats_query(t_day, t_month, t_borough, prep_trip_query1, session)
 
     return {
         'data': [{
-            'x': df1['time_block'].values,
-            'y': df1['actual_trips'].values
+            'x': df1['time_block'].values if df1 is not None else [],
+            'y': df1['actual_trips'].values if df1 is not None else [],
+            'name': "today's trips"
         },
         {
-            'x': df1['time_block'].values,
-            'y': df1['mean'].values
+            'x': df2['time_block'].values if df2 is not None else [],
+            'y': df2['mean'].values if df2 is not None else [],
+            'type':'bar',
+            'name': "historical averages"
         }
 
         ],
