@@ -35,6 +35,8 @@ For streaming, Kafka has been used to stream in real time trips, Spark streaming
 # Results
 Displayed below is the Dashboard snapshot. As you can see, there is one chart for historical averages and one daily, real time graph for each of the borough displaying actual against historical averages.
 <img src=https://github.com/shailacdi/DashCab/blob/master/doc/historical_avg.png>
+<img src=https://github.com/shailacdi/DashCab/blob/master/doc/newplot.png>
+
 
 # DataSource
 Historical Data Sources - NYC TLC Taxi Trip data
@@ -56,9 +58,10 @@ The following is the cluster used for deployment - 8 m4.large AWS EC2 instances:
     3 nodes Cassandra Cluster
     Dash Node
 
-Finally, download the repository in the Master Node of Spark Cluster
-    git clone github.com/shailacdi/DashCab
-    
+Finally, download the repository 
+    1. git clone github.com/shailacdi/DashCab in the Master Node of Spark Cluster
+    2. Copy Dashcab/web folder into Dash Node  
+ 
 # Run program
 
 BATCH PROCESSING:
@@ -77,6 +80,6 @@ REAL TRIP SIMULATION:
 
 REPORTS:
 Open a terminal in the Dash Node
-1. run python3 dashcab.py
+1. run ./runreport.sh
 2. Go to http://dashcab.live 
 The DashCab dashboard displays the historical averages and the real time trip processing trend charts.
