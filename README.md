@@ -54,9 +54,9 @@ Please refer to the following files for setup
 CLUSTER STRUCTURE:
 Setup AWS CLI and spin up cluster using https://github.com/InsightDataScience/pegasus
 The following is the cluster used for deployment - 8 m4.large AWS EC2 instances:
-    4 nodes Spark, Kafka,Airflow Cluster
-    3 nodes Cassandra Cluster
-    Dash Node
+- 4 nodes Spark, Kafka,Airflow Cluster
+- 3 nodes Cassandra Cluster
+- Dash Node
 
 Finally, download the repository 
     1. git clone github.com/shailacdi/DashCab in the Master Node of Spark Cluster
@@ -67,11 +67,12 @@ Finally, download the repository
 BATCH PROCESSING:
 1. check and set values in config/application.properties
 2. airflow backfill dashcab -s <date>
-    --OR-- 
-    Follow the sequence of programs given below
-    a. run ./upload_dataset_to_s3.sh
-    b. run ./start_batch_job.sh
-    c. run ./process_stats.sh
+
+Instead of step#2 above, follow the sequence of programs given below to get the same results
+- run ./upload_dataset_to_s3.sh
+- run ./start_batch_job.sh
+- run ./process_stats.sh
+
 The above will generate historical averages for the taxi trip dataset
 
 REAL TRIP SIMULATION:
