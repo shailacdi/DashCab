@@ -59,8 +59,11 @@ The following is the cluster used for deployment - 8 m4.large AWS EC2 instances:
 - Dash Node
 
 Finally, download the repository 
-    1. git clone github.com/shailacdi/DashCab in the Master Node of Spark Cluster
-    2. Copy Dashcab/web folder into Dash Node  
+1. git clone github.com/shailacdi/DashCab in the Master Node of Spark Cluster
+2. Copy DashCab/web folder into Dash Node  
+3. Copy DashCab/airflow folder into Master node (Spark Cluster) airflow directory
+
+Now, start the hadoop, spark, zookeeper, airflow services in Spark Cluster. Start Cassandra service in Cassandra cluster.
  
 # Run program
 
