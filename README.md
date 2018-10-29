@@ -90,5 +90,5 @@ The DashCab dashboard displays the historical averages and the real time trip pr
 
 Demo 
 <iframe width="420" height="315"
-src="https://github.com/shailacdi/DashCab/blob/master/doc/DashCab_Demo.mp4">
+src="https://youtu.be/TSJnikkZaO8">
 </iframe>
