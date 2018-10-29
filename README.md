@@ -87,3 +87,8 @@ Open a terminal in the Dash Node
 1. run ./runreport.sh
 2. Go to http://dashcab.live 
 The DashCab dashboard displays the historical averages and the real time trip processing trend charts.
+
+Demo 
+<iframe width="420" height="315"
+src="https://github.com/shailacdi/DashCab/blob/master/doc/DashCab_Demo.mp4">
+</iframe>
