@@ -89,6 +89,4 @@ Open a terminal in the Dash Node
 The DashCab dashboard displays the historical averages and the real time trip processing trend charts.
 
 Demo 
-<iframe width="420" height="315"
-src="https://youtu.be/TSJnikkZaO8">
-</iframe>
+https://youtu.be/TSJnikkZaO8
