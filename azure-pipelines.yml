@@ -18,3 +18,11 @@ stages:
         echo Add other tasks to build, test, and deploy your project.
         echo See https://aka.ms/yaml
         echo $(NAME)
+- stage: provision_uat
+  jobs:
+  - job: uat
+    steps: 
+    - script: |
+        echo Add other tasks to build, test, and deploy your project.
+        echo See https://aka.ms/yaml
+        echo $(NAME)
