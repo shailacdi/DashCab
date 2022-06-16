@@ -19,6 +19,7 @@ stages:
         echo See https://aka.ms/yaml
         echo $(NAME)
 - stage: provision_uat
+  dependsOn: provision_devtest
   jobs:
   - job: uat
     steps: 
